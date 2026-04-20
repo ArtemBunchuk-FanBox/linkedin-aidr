@@ -1,0 +1,220 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>LinkedIn AI:DR — Options</title>
+  <style>
+    body {
+      font: 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      max-width: 680px;
+      margin: 32px auto;
+      padding: 0 20px;
+      color: #1d1d1f;
+    }
+    h1 { font-size: 22px; margin: 0 0 6px; }
+    h2 { font-size: 16px; margin: 28px 0 10px; color: #0a66c2; }
+    .muted { color: #666; font-size: 13px; margin-top: 0; }
+    fieldset {
+      border: 1px solid #e0dfdc;
+      border-radius: 8px;
+      padding: 14px 18px;
+      margin: 14px 0;
+    }
+    legend { padding: 0 6px; font-weight: 600; }
+    label { display: block; margin: 8px 0; }
+    label.inline { display: inline-flex; align-items: center; gap: 6px; }
+    input[type="text"], input[type="password"], input[type="number"], textarea, select {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #d0d0d0;
+      border-radius: 6px;
+      font: inherit;
+      box-sizing: border-box;
+    }
+    textarea { min-height: 90px; font-family: ui-monospace, monospace; font-size: 12px; }
+    .row { display: flex; gap: 10px; align-items: center; }
+    .row > * { flex: 1; }
+    button {
+      background: #0a66c2; color: #fff; border: 0; border-radius: 18px;
+      padding: 8px 18px; font-weight: 600; cursor: pointer;
+    }
+    button.secondary { background: #fff; color: #0a66c2; border: 1px solid #0a66c2; }
+    .status { margin-left: 12px; color: #057642; font-weight: 600; }
+    .hint { font-size: 12px; color: #666; margin: 4px 0 0; }
+    code { background: #f3f2ef; padding: 1px 5px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <h1>LinkedIn AI:DR</h1>
+  <p class="muted">AI; Didn't Read — hides LinkedIn feed posts that mention AI or look AI-generated.</p>
+
+  <fieldset>
+    <legend>General</legend>
+    <label class="inline"><input type="checkbox" id="enabled"> Extension enabled</label>
+    <label>
+      Display mode
+      <select id="hideStyle">
+        <option value="collapse">Collapse (placeholder with "Show anyway")</option>
+        <option value="tint">Tint (red border + AI badge, keep visible)</option>
+        <option value="native">Native (click LinkedIn's own Hide button)</option>
+        <option value="remove">Remove entirely (display:none)</option>
+      </select>
+    </label>
+    <label class="inline"><input type="checkbox" id="showReason"> Show reason on collapsed posts</label>
+    <label class="inline"><input type="checkbox" id="markHumans"> Also mark human-looking posts with green HUMAN badge (tint mode only)</label>
+  </fieldset>
+
+  <fieldset>
+    <legend>Topic / keyword filter</legend>
+    <label class="inline"><input type="checkbox" id="hideKeywordMatches"> Use topic/keyword filters (master switch)</label>
+    <p class="hint">
+      Each topic has its own name, keyword list, and on/off toggle. Posts that
+      match any keyword from an <strong>enabled</strong> topic get flagged.
+      Short tokens like <code>ai</code> match whole-word only, so "said" and "again" don't trigger.
+    </p>
+
+    <div id="topicsList" style="margin-top: 10px;"></div>
+
+    <div class="new-topic-form">
+      <h3 style="font-size:13px;margin:16px 0 6px;">Add a topic</h3>
+      <div class="row" style="align-items:stretch;">
+        <input type="text" id="newTopicName" placeholder="Topic name (e.g. Crypto)" spellcheck="false">
+        <input type="text" id="newTopicKeywords" placeholder="Keywords, comma-separated (e.g. crypto, nft, web3)" spellcheck="false" style="flex: 2;">
+        <button id="addTopic" type="button">Add topic</button>
+      </div>
+      <p class="hint">Leave keywords empty to create the topic with just its name as a single keyword.</p>
+    </div>
+  </fieldset>
+
+  <style>
+    .topic-card {
+      border: 1px solid #e0dfdc;
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 10px;
+      background: #fff;
+    }
+    .topic-card.disabled { opacity: 0.55; }
+    .topic-card-head {
+      display: flex; gap: 10px; align-items: center;
+      margin-bottom: 8px;
+    }
+    .topic-card-head input[type="text"] {
+      flex: 1; font-weight: 600; padding: 4px 8px;
+      border: 1px solid transparent; background: transparent;
+      border-radius: 4px;
+    }
+    .topic-card-head input[type="text"]:hover,
+    .topic-card-head input[type="text"]:focus {
+      border-color: #d0d0d0; background: #fff;
+    }
+    .topic-card-count {
+      background: #f3f2ef; color: #666; font-size: 12px;
+      padding: 2px 10px; border-radius: 12px;
+    }
+    .topic-card-remove {
+      background: transparent; border: 1px solid #e0dfdc; color: #666;
+      border-radius: 14px; padding: 3px 10px; font-size: 12px; cursor: pointer;
+    }
+    .topic-card-remove:hover { border-color: #b42318; color: #b42318; }
+    .topic-kw-list {
+      display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px;
+    }
+    .topic-kw {
+      display: inline-flex; align-items: center; gap: 3px;
+      background: #f3f2ef; border: 1px solid #e0dfdc;
+      border-radius: 12px; padding: 3px 5px 3px 10px;
+      font-size: 12px;
+    }
+    .topic-kw button {
+      background: transparent; border: 0; color: #666;
+      font-size: 14px; line-height: 1; padding: 0 5px; cursor: pointer;
+      border-radius: 50%;
+    }
+    .topic-kw button:hover { background: #e0dfdc; color: #b42318; }
+    .topic-kw-add { display: flex; gap: 6px; margin-top: 6px; }
+    .topic-kw-add input { flex: 1; font-size: 12px; padding: 4px 8px; }
+    .topic-kw-add button {
+      background: #0a66c2; color: #fff; border: 0;
+      border-radius: 14px; padding: 4px 14px; font-size: 12px; font-weight: 600;
+      cursor: pointer;
+    }
+    .new-topic-form .row { display: flex; gap: 8px; }
+    .new-topic-form input { padding: 7px 10px; }
+    .new-topic-form button {
+      background: #0a66c2; color: #fff; border: 0;
+      border-radius: 18px; padding: 0 20px; font-weight: 600; cursor: pointer;
+    }
+  </style>
+
+  <fieldset>
+    <legend>Heuristic "slop" detector</legend>
+    <label class="inline"><input type="checkbox" id="hideSlopMatches"> Hide posts that look AI-written</label>
+    <label>
+      Sensitivity (lower = more aggressive)
+      <input type="number" id="slopThreshold" min="1" max="10" step="1">
+    </label>
+    <p class="hint">Counts signals like em-dash overuse, "it's not just X, it's Y", emoji bullets, hook openers, AI-favored phrases ("delve", "tapestry", "navigate the complexities"). Defaults to 3.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>AI-detector API (optional)</legend>
+    <label class="inline"><input type="checkbox" id="useApiDetector"> Use an AI-detection API</label>
+    <p class="hint">Calls your chosen provider per post. Use <em>borderline only</em> mode to limit cost — posts already caught by keywords/heuristics skip the API entirely.</p>
+
+    <label>
+      Provider
+      <select id="aiProvider">
+        <option value="none">None (heuristics only)</option>
+        <option value="anthropic">Anthropic Claude</option>
+        <option value="openai">OpenAI</option>
+        <option value="gptzero">GPTZero</option>
+      </select>
+    </label>
+
+    <div id="anthropic-cfg" class="provider-cfg" hidden>
+      <label>Anthropic API key
+        <input type="password" id="anthropicKey" placeholder="sk-ant-...">
+      </label>
+      <label>Model
+        <input type="text" id="anthropicModel" placeholder="claude-haiku-4-5-20251001">
+      </label>
+    </div>
+
+    <div id="openai-cfg" class="provider-cfg" hidden>
+      <label>OpenAI API key
+        <input type="password" id="openaiKey" placeholder="sk-...">
+      </label>
+      <label>Model
+        <input type="text" id="openaiModel" placeholder="gpt-4o-mini">
+      </label>
+    </div>
+
+    <div id="gptzero-cfg" class="provider-cfg" hidden>
+      <label>GPTZero API key
+        <input type="password" id="gptzeroKey" placeholder="...">
+      </label>
+      <p class="hint">GPTZero is a dedicated AI-text classifier. See gptzero.me for API access.</p>
+    </div>
+
+    <label>
+      Confidence threshold (0–1)
+      <input type="number" id="apiConfidenceThreshold" min="0" max="1" step="0.05">
+    </label>
+    <label class="inline">
+      <input type="checkbox" id="apiBorderlineOnly">
+      Only call API for borderline posts (recommended — saves money)
+    </label>
+
+    <p class="hint">API keys are stored locally in <code>chrome.storage.local</code> and sent only to the selected provider's endpoint. They never touch the LinkedIn page.</p>
+  </fieldset>
+
+  <div class="row" style="align-items: center;">
+    <button id="save">Save</button>
+    <button id="clearCache" class="secondary">Clear detector cache</button>
+    <span id="status" class="status"></span>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

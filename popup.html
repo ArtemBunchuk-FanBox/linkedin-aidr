@@ -1,0 +1,193 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    :root {
+      --blue: #0a66c2; --blue-dark: #004182;
+      --fg: #1d1d1f; --muted: #666;
+      --border: #e0dfdc; --hover: #f3f2ef;
+      --red: #b42318; --green: #0b6623;
+    }
+    body {
+      font: 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      width: 320px; margin: 0; padding: 0; color: var(--fg); background: #fff;
+    }
+
+    header {
+      padding: 14px 16px 12px;
+      background: linear-gradient(135deg, #0a66c2, #004182);
+      color: #fff;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .logo {
+      width: 36px; height: 36px; border-radius: 6px;
+      background: rgba(255,255,255,0.15);
+      display: grid; place-items: center;
+      font-weight: 800; font-size: 14px;
+    }
+    header h1 { margin: 0; font-size: 14px; font-weight: 600; }
+    header .count { font-size: 18px; font-weight: 700; line-height: 1.1; }
+    header .count span { font-size: 11px; font-weight: 400; opacity: 0.85; margin-left: 2px; }
+
+    section { padding: 10px 16px; border-bottom: 1px solid var(--border); }
+    section:last-of-type { border-bottom: 0; }
+
+    .section-title {
+      font-size: 11px; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.5px;
+      margin: 0 0 6px;
+    }
+    label { display: block; margin: 7px 0; }
+    label.inline { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+    label.inline input { margin: 0; }
+    select, input[type="text"], input[type="number"] {
+      box-sizing: border-box; padding: 6px 8px;
+      border: 1px solid #d0d0d0; border-radius: 6px;
+      font: inherit; background: #fff;
+    }
+    select, input[type="text"] { width: 100%; }
+    input[type="number"] { width: 64px; text-align: right; }
+    .row { display: flex; gap: 8px; align-items: center; margin: 7px 0; }
+    .row > *:first-child { flex: 1; }
+
+    button.primary {
+      background: var(--blue); color: #fff; border: 0;
+      border-radius: 14px; padding: 6px 14px;
+      font: 600 12px inherit; cursor: pointer;
+    }
+    button.primary:hover { background: var(--blue-dark); }
+
+    /* Topic rows */
+    .topic-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 0;
+      border-bottom: 1px dashed #eee;
+    }
+    .topic-row:last-child { border-bottom: 0; }
+    .topic-row input[type="checkbox"] { flex-shrink: 0; }
+    .topic-name {
+      flex: 1;
+      font-weight: 600;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .topic-count {
+      font-size: 11px; color: var(--muted);
+      background: var(--hover); border-radius: 10px;
+      padding: 1px 7px;
+      flex-shrink: 0;
+    }
+    .topic-actions { display: flex; gap: 2px; flex-shrink: 0; }
+    .topic-actions button {
+      background: transparent; border: 0; cursor: pointer;
+      font-size: 14px; line-height: 1;
+      padding: 3px 6px; border-radius: 4px;
+      color: var(--muted);
+    }
+    .topic-actions button:hover { background: var(--hover); color: var(--fg); }
+    .topic-actions button.remove:hover { color: var(--red); }
+
+    .topic-edit {
+      grid-column: 1 / -1;
+      padding: 6px 4px 10px 28px;
+      background: #fafafa;
+      border-top: 1px dashed #eee;
+      margin: 0 -16px; padding: 8px 16px 10px 40px;
+    }
+    .topic-edit .kw-list {
+      display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px;
+    }
+    .kw-chip {
+      display: inline-flex; align-items: center; gap: 2px;
+      background: #fff; border: 1px solid var(--border);
+      border-radius: 10px; padding: 2px 4px 2px 8px;
+      font-size: 11px;
+    }
+    .kw-chip button {
+      background: transparent; color: var(--muted); border: 0;
+      padding: 0 4px; font-size: 13px; line-height: 1; cursor: pointer;
+      border-radius: 50%;
+    }
+    .kw-chip button:hover { background: #eee; color: var(--red); }
+    .add-kw-row { display: flex; gap: 6px; }
+    .add-kw-row input { flex: 1; font-size: 11px; padding: 4px 6px; }
+    .add-kw-row button { font-size: 11px; padding: 4px 10px; }
+
+    .new-topic-row { display: flex; gap: 6px; margin-top: 8px; }
+    .new-topic-row input { flex: 1; }
+
+    .feedback { font-size: 11px; color: var(--green); min-height: 14px; margin: 4px 0 0; }
+    .feedback.err { color: var(--red); }
+
+    footer {
+      padding: 8px 16px; background: var(--hover); text-align: center;
+    }
+    footer a {
+      color: var(--blue); font-size: 12px; text-decoration: none; font-weight: 600;
+    }
+    footer a:hover { text-decoration: underline; }
+
+    details > summary { list-style: none; cursor: pointer; user-select: none; }
+    details > summary::-webkit-details-marker { display: none; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">in</div>
+  <div style="flex:1">
+    <h1>LinkedIn AI:DR</h1>
+    <div class="count"><span id="hiddenCount">0</span><span>posts hidden</span></div>
+  </div>
+</header>
+
+<section>
+  <label class="inline">
+    <input type="checkbox" id="enabled">
+    <strong>Extension enabled</strong>
+  </label>
+</section>
+
+<section>
+  <p class="section-title">Display</p>
+  <label>
+    Mode
+    <select id="hideMode">
+      <option value="collapse">Collapse (placeholder)</option>
+      <option value="tint">Tint (red border + badge)</option>
+      <option value="native">Native (click LinkedIn's Hide)</option>
+      <option value="remove">Remove entirely</option>
+    </select>
+  </label>
+  <label class="inline"><input type="checkbox" id="markHumans"> Mark human posts (tint only)</label>
+  <label class="inline"><input type="checkbox" id="showReason"> Show reason on flagged posts</label>
+</section>
+
+<section>
+  <p class="section-title">Detection</p>
+  <label class="inline"><input type="checkbox" id="hideKeywordMatches"> Use topic/keyword filters</label>
+  <label class="inline"><input type="checkbox" id="hideSlopMatches"> AI-slop heuristic</label>
+  <div class="row" style="margin-top: 4px">
+    <span style="flex:1;color:var(--muted);font-size:12px">Sensitivity (lower = stricter)</span>
+    <input type="number" id="slopThreshold" min="1" max="10">
+  </div>
+</section>
+
+<section>
+  <p class="section-title">Topics</p>
+  <div id="topics"></div>
+
+  <div class="new-topic-row">
+    <input type="text" id="newTopicName" placeholder="New topic name (e.g. Crypto)" spellcheck="false">
+    <button class="primary" id="addTopic">Add</button>
+  </div>
+  <div class="feedback" id="topicFeedback"></div>
+</section>
+
+<footer>
+  <a href="#" id="openOptions">Advanced settings & API keys →</a>
+</footer>
+
+<script src="popup.js"></script>
+</body>
+</html>

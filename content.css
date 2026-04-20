@@ -1,0 +1,83 @@
+/* LinkedIn NO AI — visual marking modes */
+
+/* Tint mode: red outline + AI badge for flagged posts */
+[data-lni-mark="ai"] {
+  outline: 3px solid #b42318 !important;
+  outline-offset: -3px;
+  background: rgba(180, 35, 24, 0.04);
+  position: relative;
+}
+[data-lni-mark="ai"]::before {
+  content: "AI";
+  position: absolute;
+  top: 8px; right: 8px;
+  background: #b42318; color: #fff;
+  padding: 3px 10px; border-radius: 4px;
+  font: 600 11px -apple-system, "Segoe UI", Roboto, sans-serif;
+  z-index: 10;
+  pointer-events: none;
+  max-width: 60%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Only show the reason when showReason is on (we only set the attribute then) */
+[data-lni-mark="ai"][data-lni-reason]::before {
+  content: "AI · " attr(data-lni-reason);
+}
+
+/* Tint mode: green outline + HUMAN badge for posts that pass */
+[data-lni-mark="human"] {
+  outline: 3px solid #0b6623 !important;
+  outline-offset: -3px;
+  background: rgba(11, 102, 35, 0.03);
+  position: relative;
+}
+[data-lni-mark="human"]::before {
+  content: "HUMAN";
+  position: absolute;
+  top: 8px; right: 8px;
+  background: #0b6623; color: #fff;
+  padding: 3px 10px; border-radius: 4px;
+  font: 600 11px -apple-system, "Segoe UI", Roboto, sans-serif;
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* Collapsed post placeholder */
+.lni-note {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  margin: 4px 0;
+  font: 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #555;
+  background: #f3f2ef;
+  border: 1px solid #e0dfdc;
+  border-radius: 8px;
+}
+.lni-note-label {
+  font-weight: 600;
+  color: #0a66c2;
+}
+.lni-note-reason {
+  color: #666;
+  font-style: italic;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lni-note-reveal {
+  background: transparent;
+  border: 1px solid #0a66c2;
+  color: #0a66c2;
+  border-radius: 14px;
+  padding: 3px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.lni-note-reveal:hover {
+  background: #eaf3fb;
+}
